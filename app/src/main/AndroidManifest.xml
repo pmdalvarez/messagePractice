@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="de.erasys.paolo.mysecondapp_usingfragments" >
+    package="de.erasys.paolo.mysecondapp_usingfragments"
+    >
+
+    <uses-sdk android:minSdkVersion="15" />
 
     <application
         android:allowBackup="true"
@@ -17,10 +20,10 @@
             </intent-filter>
         </activity>
         <provider
-            android:name=".MyContentProvider"
-            android:authorities="de.erasys.paolo.mysecondapp_usingfragments.provider"
-            android:enabled="true"
-            android:exported="false" />
+            android:name=".content.MessagesContentProvider"
+            android:authorities="de.erasys.paolo.mysecondapp_usingfragments.content" >
+        </provider>
+
     </application>
 
 

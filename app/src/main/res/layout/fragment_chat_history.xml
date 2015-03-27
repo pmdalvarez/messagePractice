@@ -1,5 +1,20 @@
-<ListView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp">
+
+    <Button android:id="@+id/button_new_message"  android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/button_new_message"
+        android:layout_alignParentTop="true"
+    ></Button>
+
+
+    <ListView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/chat_history"
+    android:layout_below="@id/button_new_message"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content" />
 
+</RelativeLayout>

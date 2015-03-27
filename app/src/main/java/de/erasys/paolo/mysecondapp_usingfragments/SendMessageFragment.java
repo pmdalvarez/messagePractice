@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -51,10 +52,19 @@ public class SendMessageFragment extends Fragment {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                EditText editText = (EditText) getView().findViewById(R.id.edit_message);
-                String message = editText.getText().toString();
-                mListener.onMessageSent(message);
-                editText.setText(""); // clear input
+                EditText subjectTextField = (EditText)getView().findViewById(R.id.edit_subject);
+                EditText messageTextField = (EditText)getView().findViewById(R.id.edit_message);
+                String subject = subjectTextField.getText().toString();
+                String message = messageTextField.getText().toString();
+
+                if (subject != null && !subject.isEmpty() && message != null && !message.isEmpty()) {
+                    mListener.onMessageSent(subject, message);
+                    // clear input
+                    subjectTextField.setText("");
+                    messageTextField.setText("");
+                } else {
+                    Toast.makeText(getActivity().getApplicationContext(), R.string.error_no_message, Toast.LENGTH_LONG).show();
+                }
             }
         });
         return view;
@@ -83,7 +93,7 @@ public class SendMessageFragment extends Fragment {
     }
 
     public interface OnMessageSentListener {
-        public void onMessageSent(String message);
+        public void onMessageSent(String subject, String message);
     }
 
 }

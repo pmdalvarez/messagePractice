@@ -2,12 +2,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingLeft="16dp"
-    android:paddingRight="16dp" >
-<EditText android:id="@+id/edit_message" android:layout_width="wrap_content"
+    android:paddingRight="16dp">
+<EditText android:id="@+id/edit_subject" android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:hint="@string/edit_message"></EditText>
+    android:hint="@string/edit_subject"></EditText>
+<EditText android:id="@+id/edit_message" android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:layout_below="@id/edit_subject"
+    android:hint="@string/edit_message"
+    android:layout_alignParentLeft="true"
+    android:layout_alignParentStart="true"
+    android:layout_alignParentRight="true"
+    android:layout_alignParentEnd="true"></EditText>
 <Button android:id="@+id/button_send"  android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:text="@string/button_send"
-    android:layout_below="@+id/edit_message"></Button>
+    android:layout_alignParentTop="true"
+    android:layout_alignRight="@+id/edit_message"></Button>
 </RelativeLayout>

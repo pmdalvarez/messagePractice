@@ -56,8 +56,8 @@ public class MessagesAdapter extends BaseAdapter {
             convertView = inflater.inflate(R.layout.chat_history_item, parent, false);
         }
 
-        TextView label = (TextView) convertView.findViewById(R.id.chat_history_item_label);
-        TextView desc = (TextView) convertView.findViewById(R.id.chat_history_item_desc);
+        TextView label = (TextView) convertView.findViewById(R.id.chat_history_item_subject);
+        TextView desc = (TextView) convertView.findViewById(R.id.chat_history_item_message);
         ImageView imageView = (ImageView) convertView.findViewById(R.id.icon);
 
         label.setText("Message Number #" + (int) (position + 1) );

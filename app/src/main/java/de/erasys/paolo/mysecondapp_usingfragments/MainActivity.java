@@ -1,17 +1,27 @@
 package de.erasys.paolo.mysecondapp_usingfragments;
 
+import android.content.ContentValues;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.SimpleCursorAdapter;
 
-public class MainActivity extends FragmentActivity implements SendMessageFragment.OnMessageSentListener {
+import de.erasys.paolo.mysecondapp_usingfragments.content.MessagesContentProvider;
+import de.erasys.paolo.mysecondapp_usingfragments.content.MessagesTable;
+
+public class MainActivity extends FragmentActivity
+        implements  SendMessageFragment.OnMessageSentListener,
+                    ChatHistoryFragment.OnEditMessageListener {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     private ChatHistoryFragment chatHistoryFragment = null;
+
+    // private Cursor cursor;
+    private SimpleCursorAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,18 +40,7 @@ Log.d(LOG_TAG, "Activity onCreate");
         // the fragment_container FrameLayout
         if (findViewById(R.id.fragment_container) != null) {
             Log.d(LOG_TAG, "Activity onCreate found fragment_container (ie. in portrait mode)");
-
-
-            // Create a new Fragment to be placed in the activity layout
-            SendMessageFragment sendMessageFragment = new SendMessageFragment();
-
-            // In case this activity was started with special instructions from an
-            // Intent, pass the Intent's extras to the fragment as arguments
-            sendMessageFragment.setArguments(getIntent().getExtras());
-
-            // Add the fragment to the 'fragment_container' FrameLayout
-            getSupportFragmentManager().beginTransaction()
-              .add(R.id.fragment_container, sendMessageFragment).commit();
+            loadChatHistoryFragment();
         }
 Log.d(LOG_TAG, "Activity onCreate End");
     }
@@ -69,48 +68,82 @@ Log.d(LOG_TAG, "Activity onCreate End");
         return super.onOptionsItemSelected(item);
     }
 
-    public void onMessageSent(String message) {
+    public void onMessageSent(String subject, String message) {
         // The user selected the headline of an article from the HeadlinesFragment
         // Do something here to display that article
         Log.d(LOG_TAG, "onMessageSent");
 
-        if (findViewById(R.id.fragment_container) == null) {
-            // we're in two-pane layout if fragment_container doesnt exist
+        ContentValues values = new ContentValues();
+        values.put(MessagesTable.COLUMN_SUBJECT, subject);
+        values.put(MessagesTable.COLUMN_MESSAGE, message);
+        getContentResolver().insert(MessagesContentProvider.CONTENT_URI, values);
 
-            ChatHistoryFragment chatHistoryFragment = (ChatHistoryFragment)
-              getSupportFragmentManager().findFragmentById(R.id.fragment_chat_history);
-
-            // Call a method in the ChatHistoryFragment to update its content
-            chatHistoryFragment.updateChatHistoryView(message);
-        } else {
-            // Otherwise, we're in the one-pane layout and must swap frags...
-
-            if (this.chatHistoryFragment == null)  {
-
-                ChatHistoryFragment previousChatHistoryFragment = (ChatHistoryFragment)
-                        getSupportFragmentManager().findFragmentByTag("portraitChatFragment");
-
-                this.chatHistoryFragment = (chatHistoryFragment != null) ?
-                        previousChatHistoryFragment : new ChatHistoryFragment();
-                Log.d(LOG_TAG, "new chatHistoryFragment");
-            } else {
-                Log.d(LOG_TAG, "found chatHistoryFragment");
-            }
-
-            Bundle args = new Bundle();
-            args.putString(ChatHistoryFragment.SENT_MESSAGE, message);
-            this.chatHistoryFragment.setArguments(args);
-
-            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-
-            // Replace whatever is in the fragment_container view with this fragment,
-            // and add the transaction to the back stack so the user can navigate back
-            transaction.replace(R.id.fragment_container, this.chatHistoryFragment, "portraitChatFragment");
-            transaction.addToBackStack(null);
-
-            // Commit the transaction
-            transaction.commit();
+        // if in portrait mode need to go back to chat history fragment
+        if (findViewById(R.id.fragment_container) != null) {
+            loadChatHistoryFragment();
         }
+//        if (findViewById(R.id.fragment_container) == null) {
+//            // we're in two-pane layout if fragment_container doesnt exist
+//
+//            ChatHistoryFragment chatHistoryFragment = (ChatHistoryFragment)
+//              getSupportFragmentManager().findFragmentById(R.id.fragment_chat_history);
+//
+//            // Call a method in the ChatHistoryFragment to update its content
+//            chatHistoryFragment.updateChatHistoryView(subject, message);
+//        } else {
+//            // Otherwise, we're in the one-pane layout and must swap frags...
+//            loadChatHistoryFragment(subject, message);
+//        }
+    }
+
+    public void onEditMessage(String msgId) {
+        loadSendMessageFragment();
+    }
+
+    private void loadSendMessageFragment() {
+        // Create a new Fragment to be placed in the activity layout
+        SendMessageFragment sendMessageFragment = new SendMessageFragment();
+
+        // In case this activity was started with special instructions from an
+        // Intent, pass the Intent's extras to the fragment as arguments
+        sendMessageFragment.setArguments(getIntent().getExtras());
+
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        // Replace whatever is in the fragment_container view with this fragment,
+        // and add the transaction to the back stack so the user can navigate back
+        transaction.replace(R.id.fragment_container, sendMessageFragment, "portraitSendMsgFragment");
+        transaction.addToBackStack(null);
+        transaction.commit();
+
+    }
+
+    private void loadChatHistoryFragment() {
+        if (this.chatHistoryFragment == null)  {
+
+            ChatHistoryFragment previousChatHistoryFragment = (ChatHistoryFragment)
+                    getSupportFragmentManager().findFragmentByTag("portraitChatFragment");
+
+            this.chatHistoryFragment = (chatHistoryFragment != null) ?
+                    previousChatHistoryFragment : new ChatHistoryFragment();
+            Log.d(LOG_TAG, "new chatHistoryFragment");
+        } else {
+            Log.d(LOG_TAG, "found chatHistoryFragment");
+        }
+
+//        if (message != null && subject != null) {
+//            Bundle args = new Bundle();
+//            args.putString(ChatHistoryFragment.SENT_SUBJECT, subject);
+//            args.putString(ChatHistoryFragment.SENT_MESSAGE, message);
+//            this.chatHistoryFragment.setArguments(args);
+//        }
+
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+        // Replace whatever is in the fragment_container view with this fragment,
+        // and add the transaction to the back stack so the user can navigate back
+        transaction.replace(R.id.fragment_container, this.chatHistoryFragment, "portraitChatFragment");
+        transaction.addToBackStack(null);
+        transaction.commit();
     }
 
     @Override
@@ -136,5 +169,6 @@ Log.d(LOG_TAG, "Activity onCreate End");
         super.onDestroy();
         Log.d(LOG_TAG, "Activity onDestroy");
     }
+
 
 }
