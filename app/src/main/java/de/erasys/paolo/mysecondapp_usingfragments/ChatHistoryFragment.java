@@ -74,7 +74,7 @@ Log.d(LOG_TAG, "onCreateView");
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.onEditMessage(null);
+                mListener.onEditMessage(OnEditMessageListener.NO_ID);
             }
         });
         return view;
@@ -99,6 +99,12 @@ Log.d(LOG_TAG, "onActivityCreated");
 //                return true;
 //            }
 //        });
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                mListener.onEditMessage(id);
+            }
+        });
 
 
     }
@@ -155,7 +161,8 @@ Log.d(LOG_TAG, "onActivityCreated");
 
 
     public interface OnEditMessageListener {
-        public void onEditMessage(String msgId);
+        public static long NO_ID = 0;
+        public void onEditMessage(long msgId);
     }
 
 

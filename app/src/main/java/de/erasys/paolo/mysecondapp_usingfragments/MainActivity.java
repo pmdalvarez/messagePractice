@@ -68,15 +68,19 @@ Log.d(LOG_TAG, "Activity onCreate End");
         return super.onOptionsItemSelected(item);
     }
 
-    public void onMessageSent(String subject, String message) {
+    public void onMessageSent(String subject, String message, long msgId) {
         // The user selected the headline of an article from the HeadlinesFragment
         // Do something here to display that article
-        Log.d(LOG_TAG, "onMessageSent");
+    Log.d(LOG_TAG, "onMessageSent and id is " + msgId);
 
         ContentValues values = new ContentValues();
         values.put(MessagesTable.COLUMN_SUBJECT, subject);
         values.put(MessagesTable.COLUMN_MESSAGE, message);
-        getContentResolver().insert(MessagesContentProvider.CONTENT_URI, values);
+        if (msgId != NO_ID) {
+            getContentResolver().update(MessagesContentProvider.CONTENT_URI, values, MessagesTable.COLUMN_ID + "=" + msgId, null);
+        } else {
+            getContentResolver().insert(MessagesContentProvider.CONTENT_URI, values);
+        }
 
         // if in portrait mode need to go back to chat history fragment
         if (findViewById(R.id.fragment_container) != null) {
@@ -96,17 +100,21 @@ Log.d(LOG_TAG, "Activity onCreate End");
 //        }
     }
 
-    public void onEditMessage(String msgId) {
-        loadSendMessageFragment();
+    public void onEditMessage(long msgId) {
+        loadSendMessageFragment(msgId);
     }
 
-    private void loadSendMessageFragment() {
+    private void loadSendMessageFragment(long msgId) {
         // Create a new Fragment to be placed in the activity layout
         SendMessageFragment sendMessageFragment = new SendMessageFragment();
 
         // In case this activity was started with special instructions from an
         // Intent, pass the Intent's extras to the fragment as arguments
-        sendMessageFragment.setArguments(getIntent().getExtras());
+
+
+        Bundle args = new Bundle();
+        args.putLong(SendMessageFragment.MSG_ID, msgId);
+        sendMessageFragment.setArguments(args);
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         // Replace whatever is in the fragment_container view with this fragment,
