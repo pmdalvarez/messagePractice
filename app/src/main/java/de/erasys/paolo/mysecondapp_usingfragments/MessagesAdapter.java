@@ -1,77 +1,59 @@
 package de.erasys.paolo.mysecondapp_usingfragments;
 
 import android.content.Context;
+import android.database.Cursor;
+import android.support.v4.widget.CursorAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import de.erasys.paolo.mysecondapp_usingfragments.content.MessagesTable;
 
 /**
  * Created by paolo on 13.03.15.
  */
-public class MessagesAdapter extends BaseAdapter {
+public class MessagesAdapter extends CursorAdapter {
 
-    private static final String LOG_TAG = MessagesAdapter.class.getSimpleName();
+    private LayoutInflater mInflater;
 
-    private final Context context;
-    private final ArrayList<String> values;
-
-    public MessagesAdapter(Context context, ArrayList values) {
-        this.context = context;
-        this.values = values;
+    public MessagesAdapter(Context context, Cursor c, int flags) {
+        super(context, c, flags);
+        mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     @Override
-    public int getCount() {
-        return values.size();
+    public View newView(Context context, Cursor cursor, ViewGroup parent) {
+        View v = mInflater.inflate(R.layout.chat_history_item, parent, false);
+        return v;
     }
 
     @Override
-    public Object getItem(int i) {
-        return values.get(i);
-    }
+    public void bindView(View v, Context context, Cursor c) {
+        String date = c.getString(c.getColumnIndexOrThrow(MessagesTable.COLUMN_DATE));
+        String subject = c.getString(c.getColumnIndexOrThrow(MessagesTable.COLUMN_SUBJECT));
+        String message = c.getString(c.getColumnIndexOrThrow(MessagesTable.COLUMN_MESSAGE));
 
-    @Override
-    public long getItemId(int i)
-    {
-        // used by onclick listener
-        return i;
-    }
-
-    public void add(String message) {
-        Log.d(LOG_TAG, "adding message " + message);
-        values.add(message);
-        notifyDataSetChanged();
-    }
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        if (convertView == null) {
-            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = inflater.inflate(R.layout.chat_history_item, parent, false);
+        TextView dateView = (TextView) v.findViewById(R.id.chat_history_item_date);
+        try {
+            Date dateObj  = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(date);
+            String dateFormatted = new SimpleDateFormat("d MMM yy HH:mm:ss").format(dateObj);
+            dateView.setText(dateFormatted);
+        } catch (ParseException e) {
+            // don't format the date
+            Log.d(this.getClass().getName(), "setViewValue PARSE ERROR date string  = " + date);
         }
 
-        TextView label = (TextView) convertView.findViewById(R.id.chat_history_item_subject);
-        TextView desc = (TextView) convertView.findViewById(R.id.chat_history_item_message);
-        ImageView imageView = (ImageView) convertView.findViewById(R.id.icon);
+        TextView subjectView = (TextView) v.findViewById(R.id.chat_history_item_subject);
+        subjectView.setText(subject);
 
-        label.setText("Message Number #" + (int) (position + 1) );
- Log.d(LOG_TAG, "values:" + values.toString() + " value:" + values.get(position));
+        TextView msgView = (TextView) v.findViewById(R.id.chat_history_item_message);
+        msgView.setText(message);
 
-        desc.setText((String)values.get(position));
-        if (position % 2 == 0) {
-            imageView.setImageResource(R.drawable.twitter);
-        } else {
-            imageView.setImageResource(R.drawable.utorrent);
-        }
-
-        return convertView;
     }
-
 }
-

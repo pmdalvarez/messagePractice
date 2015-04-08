@@ -33,6 +33,10 @@ public class SendMessageFragment extends Fragment {
 
     private OnMessageSentListener mListener;
 
+    public static interface OnMessageSentListener {
+        public void onMessageSent(String subject, String message, long msgId);
+    }
+
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -61,10 +65,15 @@ public class SendMessageFragment extends Fragment {
         Button button = (Button) view.findViewById(R.id.button_send);
 
         Bundle args = getArguments();
-        final long msgId = args.getLong(MSG_ID);
+        final long msgId;
+        if (args != null) {
+            msgId = args.getLong(MSG_ID);
+        } else {
+            msgId = ChatHistoryFragment.OnEditMessageListener.NO_ID;
+        }
 
-        // if msd id defined then let's initialise text values
         initializeTextFields(view, msgId);
+Log.d(LOG_TAG, "ON CREATE VIEW SEND MESSAGE FRAGMENT ");
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -84,6 +93,7 @@ public class SendMessageFragment extends Fragment {
                 }
             }
         });
+
         return view;
     }
 
@@ -109,6 +119,12 @@ Log.d(LOG_TAG, "initializeTextFields found cursor! ");
     }
 
     @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+Log.d(LOG_TAG, "onActivityCreated");
+    }
+
+    @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
     }
@@ -128,10 +144,6 @@ Log.d(LOG_TAG, "initializeTextFields found cursor! ");
     public void onDetach() {
         super.onDetach();
         mListener = null;
-    }
-
-    public interface OnMessageSentListener {
-        public void onMessageSent(String subject, String message, long msgId);
     }
 
 }

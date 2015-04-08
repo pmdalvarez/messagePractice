@@ -1,18 +1,19 @@
 package de.erasys.paolo.mysecondapp_usingfragments;
 
 import android.content.ContentValues;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.SimpleCursorAdapter;
+import android.view.View;
 
 import de.erasys.paolo.mysecondapp_usingfragments.content.MessagesContentProvider;
 import de.erasys.paolo.mysecondapp_usingfragments.content.MessagesTable;
 
-public class MainActivity extends FragmentActivity
+public class MainActivity extends ActionBarActivity
         implements  SendMessageFragment.OnMessageSentListener,
                     ChatHistoryFragment.OnEditMessageListener {
 
@@ -20,58 +21,39 @@ public class MainActivity extends FragmentActivity
 
     private ChatHistoryFragment chatHistoryFragment = null;
 
-    // private Cursor cursor;
-    private SimpleCursorAdapter adapter;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-Log.d(LOG_TAG, "Activity onCreate");
-
-        // if we're being restored from a previous state,
-        // then we don't need to do anything and should return or else
-        // we could end up with overlapping fragments.
-        if (savedInstanceState != null) {
-            return;
-        }
-
-        // Check that the activity is using the layout version with
-        // the fragment_container FrameLayout
-        if (findViewById(R.id.fragment_container) != null) {
-            Log.d(LOG_TAG, "Activity onCreate found fragment_container (ie. in portrait mode)");
-            loadChatHistoryFragment();
-        }
-Log.d(LOG_TAG, "Activity onCreate End");
-    }
-
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+
+        // if in portrait mode need to go back to chat history fragment
+        if (findViewById(R.id.fragment_container) != null) {
+            MenuInflater inflater = getMenuInflater();
+            inflater.inflate(R.menu.main_activity_actions, menu);
+            return super.onCreateOptionsMenu(menu);
+        } else {
+            return true;
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        // Handle presses on the action bar items
+        switch (item.getItemId()) {
+            case R.id.action_new_msg:
+                View v = findViewById(R.id.fragment_container_new_msg);
+                if (v != null) {
+                    v.setVisibility(View.VISIBLE);
+                    return true;
+                }
+            default:
+                return super.onOptionsItemSelected(item);
         }
-
-        return super.onOptionsItemSelected(item);
     }
 
     public void onMessageSent(String subject, String message, long msgId) {
         // The user selected the headline of an article from the HeadlinesFragment
         // Do something here to display that article
-    Log.d(LOG_TAG, "onMessageSent and id is " + msgId);
+    Log.d(getLocalClassName(), "onMessageSent and id is " + msgId);
 
         ContentValues values = new ContentValues();
         values.put(MessagesTable.COLUMN_SUBJECT, subject);
@@ -80,6 +62,10 @@ Log.d(LOG_TAG, "Activity onCreate End");
             getContentResolver().update(MessagesContentProvider.CONTENT_URI, values, MessagesTable.COLUMN_ID + "=" + msgId, null);
         } else {
             getContentResolver().insert(MessagesContentProvider.CONTENT_URI, values);
+            View v = findViewById(R.id.fragment_container_new_msg);
+            if (v != null) {
+                v.setVisibility(View.GONE);
+            }
         }
 
         // if in portrait mode need to go back to chat history fragment
@@ -98,31 +84,6 @@ Log.d(LOG_TAG, "Activity onCreate End");
 //            // Otherwise, we're in the one-pane layout and must swap frags...
 //            loadChatHistoryFragment(subject, message);
 //        }
-    }
-
-    public void onEditMessage(long msgId) {
-        loadSendMessageFragment(msgId);
-    }
-
-    private void loadSendMessageFragment(long msgId) {
-        // Create a new Fragment to be placed in the activity layout
-        SendMessageFragment sendMessageFragment = new SendMessageFragment();
-
-        // In case this activity was started with special instructions from an
-        // Intent, pass the Intent's extras to the fragment as arguments
-
-
-        Bundle args = new Bundle();
-        args.putLong(SendMessageFragment.MSG_ID, msgId);
-        sendMessageFragment.setArguments(args);
-
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        // Replace whatever is in the fragment_container view with this fragment,
-        // and add the transaction to the back stack so the user can navigate back
-        transaction.replace(R.id.fragment_container, sendMessageFragment, "portraitSendMsgFragment");
-        transaction.addToBackStack(null);
-        transaction.commit();
-
     }
 
     private void loadChatHistoryFragment() {
@@ -153,6 +114,54 @@ Log.d(LOG_TAG, "Activity onCreate End");
         transaction.addToBackStack(null);
         transaction.commit();
     }
+
+    public void onEditMessage(long msgId) {
+        loadSendMessageFragment(msgId);
+    }
+
+    private void loadSendMessageFragment(long msgId) {
+        // Create a new Fragment to be placed in the activity layout
+        SendMessageFragment sendMessageFragment = new SendMessageFragment();
+
+        // In case this activity was started with special instructions from an
+        // Intent, pass the Intent's extras to the fragment as arguments
+
+
+        Bundle args = new Bundle();
+        args.putLong(SendMessageFragment.MSG_ID, msgId);
+        sendMessageFragment.setArguments(args);
+
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        // Replace whatever is in the fragment_container view with this fragment,
+        // and add the transaction to the back stack so the user can navigate back
+        transaction.replace(R.id.fragment_container, sendMessageFragment, "portraitSendMsgFragment");
+        transaction.addToBackStack(null);
+        transaction.commit();
+
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Log.d(LOG_TAG, "Activity onCreate");
+
+        // if we're being restored from a previous state,
+        // then we don't need to do anything and should return or else
+        // we could end up with overlapping fragments.
+        if (savedInstanceState != null) {
+            return;
+        }
+
+        // Check that the activity is using the layout version with
+        // the fragment_container FrameLayout
+        if (findViewById(R.id.fragment_container) != null) {
+            Log.d(LOG_TAG, "Activity onCreate found fragment_container (ie. in portrait mode)");
+            loadChatHistoryFragment();
+        }
+        Log.d(LOG_TAG, "Activity onCreate End");
+    }
+
 
     @Override
     protected void onRestart() {

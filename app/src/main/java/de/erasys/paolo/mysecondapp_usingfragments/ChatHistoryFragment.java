@@ -1,11 +1,11 @@
 package de.erasys.paolo.mysecondapp_usingfragments;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -19,13 +19,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
-import android.widget.TextView;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import de.erasys.paolo.mysecondapp_usingfragments.content.MessagesContentProvider;
 import de.erasys.paolo.mysecondapp_usingfragments.content.MessagesTable;
 
@@ -45,8 +38,12 @@ public class ChatHistoryFragment extends Fragment
     private OnEditMessageListener mListener;
 
     // this is the Adapter being used to display the chat history data
-    SimpleCursorAdapter mAdapter = null;
+    MessagesAdapter mAdapter = null;
 
+    public static interface OnEditMessageListener {
+        public static long NO_ID = 0;
+        public void onEditMessage(long msgId);
+    }
 
     /**
      * Use this factory method to create a new instance of
@@ -69,14 +66,6 @@ public class ChatHistoryFragment extends Fragment
         // Inflate the layout for this fragment
         View view =  inflater.inflate(R.layout.fragment_chat_history, container, false);
 Log.d(LOG_TAG, "onCreateView");
-
-        Button button = (Button) view.findViewById(R.id.button_new_message);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mListener.onEditMessage(OnEditMessageListener.NO_ID);
-            }
-        });
         return view;
     }
 
@@ -87,26 +76,30 @@ Log.d(LOG_TAG, "onActivityCreated");
         final ListView listView = (ListView) getView().findViewById(R.id.chat_history);
         fillData();
         registerForContextMenu(listView); // can register for context menu only after filling data
-//
-//        // listener for delete message
-//        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-//            public boolean onItemLongClick(AdapterView lv, View v, int position, long id) {
-//                Intent i = new Intent(getActivity(), MainActivity.class);
-//                Uri todoUri = Uri.parse(MessagesContentProvider.CONTENT_URI + "/" + id);
-//                i.putExtra(MessagesContentProvider.CONTENT_ITEM_TYPE, todoUri);
-//
-//                startActivity(i);
-//                return true;
-//            }
-//        });
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                mListener.onEditMessage(id);
+            mListener.onEditMessage(id);
             }
         });
 
+        // if in portrait mode then add send new message fragment
+        if (getActivity().findViewById(R.id.fragment_container) != null) {
+Log.d(LOG_TAG, "onActivityCreated found fragment_container (ie. in portrait mode)");
+            loadNewMsgFragment();
+        }
+    }
 
+    private void loadNewMsgFragment() {
+        Log.d(LOG_TAG, "loading new msg fragment! ");
+        SendMessageFragment sendMessageFragment = new SendMessageFragment();
+        // In case this activity was started with special instructions from an
+        // Intent, pass the Intent's extras to the fragment as arguments
+        Bundle args = new Bundle();
+        args.putLong(SendMessageFragment.MSG_ID, ChatHistoryFragment.OnEditMessageListener.NO_ID);
+        sendMessageFragment.setArguments(args);
+        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
+        transaction.add(R.id.fragment_container_new_msg, sendMessageFragment).commit();
     }
 
     @Override
@@ -124,7 +117,9 @@ Log.d(LOG_TAG, "onActivityCreated");
                         .getMenuInfo();
                 Uri uri = Uri.parse(MessagesContentProvider.CONTENT_URI + "/"
                         + info.id);
-                getActivity().getContentResolver().delete(uri, null, null);
+                Activity activity = getActivity();
+                if (activity == null)   break;
+                activity.getContentResolver().delete(uri, null, null);
                 fillData();
                 return true;
         }
@@ -159,13 +154,6 @@ Log.d(LOG_TAG, "onActivityCreated");
 //        savedInstanceState.putStringArrayList(HISTORY, messages);
     }
 
-
-    public interface OnEditMessageListener {
-        public static long NO_ID = 0;
-        public void onEditMessage(long msgId);
-    }
-
-
     @Override
     public Loader onCreateLoader(int i, Bundle bundle) {
         String[] projection = {
@@ -189,46 +177,9 @@ Log.d(LOG_TAG, "onActivityCreated");
     }
 
     private void fillData() {
-Log.d(LOG_TAG, "fillData");
-        // Fields from the database (projection)
-        // Must include the _id column for the adapter to work
-        String[] from = new String[] {
-            MessagesTable.COLUMN_DATE,
-            MessagesTable.COLUMN_SUBJECT,
-            MessagesTable.COLUMN_MESSAGE
-        };
-        // Fields on the UI to which we map
-        int[] to = new int[] {
-            R.id.chat_history_item_date,
-            R.id.chat_history_item_subject,
-            R.id.chat_history_item_message
-        };
-
+        Log.d(LOG_TAG, "fillData");
         getLoaderManager().initLoader(0, null, this);
-        mAdapter = new SimpleCursorAdapter(getActivity(), R.layout.chat_history_item, null, from, to, 0);
-
-        mAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
-            @Override
-            public boolean setViewValue(View view, Cursor cursor, int column) {
-                int dateCol = cursor.getColumnIndex( MessagesTable.COLUMN_DATE);
-                if (column == dateCol) {
-                  String msgDate = cursor.getString(dateCol);
-                  try {
-                      TextView tv = (TextView) view;
-                      Date dateObj  = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(msgDate);
-                      String dateStr = new SimpleDateFormat("d MMM yy HH:mm:ss").format(dateObj);
-                      tv.setText(dateStr);
-                      return true;
-                  } catch (ParseException e) {
-                      // don't format the date
-                      Log.d(LOG_TAG, "setViewValue PARSE ERROR column value " + column + " date string is " + cursor.getString(column));
-                  }
-
-                }
-                return false;
-            }
-        });
-
+        mAdapter = new MessagesAdapter(getActivity(), null, MessagesAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         final ListView listView = (ListView) getView().findViewById(R.id.chat_history);
         if (listView != null) listView.setAdapter(mAdapter);
     }
