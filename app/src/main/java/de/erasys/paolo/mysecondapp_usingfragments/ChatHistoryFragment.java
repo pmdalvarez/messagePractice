@@ -5,7 +5,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -18,7 +17,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
+
 import de.erasys.paolo.mysecondapp_usingfragments.content.MessagesContentProvider;
 import de.erasys.paolo.mysecondapp_usingfragments.content.MessagesTable;
 
@@ -40,7 +42,8 @@ public class ChatHistoryFragment extends Fragment
 
     private static final int DELETE_ID = Menu.FIRST + 1;
 
-    private OnEditMessageListener mListener;
+    private OnEditMessageListener mListenerEditMsg;
+    private SendMessageFragment.OnMessageSentListener mListenerMsgSent;
 
     // this is the Adapter being used to display the chat history data
     MessagesAdapter mAdapter = null;
@@ -66,6 +69,27 @@ public class ChatHistoryFragment extends Fragment
         // Inflate the layout for this fragment
         View view =  inflater.inflate(R.layout.fragment_chat_history, container, false);
 Log.d(LOG_TAG, "onCreateView");
+
+        Button button = (Button) view.findViewById(R.id.button_send_new);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                EditText subjectTextField = (EditText)getView().findViewById(R.id.new_subject);
+                EditText messageTextField = (EditText)getView().findViewById(R.id.new_message);
+                String subject = subjectTextField.getText().toString();
+                String message = messageTextField.getText().toString();
+
+                if (subject != null && !subject.isEmpty() && message != null && !message.isEmpty()) {
+                    mListenerMsgSent.onMessageSent(subject, message, OnEditMessageListener.NO_ID);
+                    // clear input
+                    subjectTextField.setText("");
+                    messageTextField.setText("");
+                } else {
+                    Toast.makeText(getActivity().getApplicationContext(), R.string.error_no_message, Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
         return view;
     }
 
@@ -79,27 +103,14 @@ Log.d(LOG_TAG, "onActivityCreated");
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            mListener.onEditMessage(id);
+            mListenerEditMsg.onEditMessage(id);
             }
         });
 
         // if in portrait mode then add send new message fragment
         if (getActivity().findViewById(R.id.fragment_container) != null) {
-Log.d(LOG_TAG, "onActivityCreated found fragment_container (ie. in portrait mode)");
-            loadNewMsgFragment();
+            // TODO make new msg thing visible
         }
-    }
-
-    private void loadNewMsgFragment() {
-        Log.d(LOG_TAG, "loading new msg fragment! ");
-        SendMessageFragment sendMessageFragment = new SendMessageFragment();
-        // In case this activity was started with special instructions from an
-        // Intent, pass the Intent's extras to the fragment as arguments
-        Bundle args = new Bundle();
-        args.putLong(SendMessageFragment.MSG_ID, ChatHistoryFragment.OnEditMessageListener.NO_ID);
-        sendMessageFragment.setArguments(args);
-        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-        transaction.add(R.id.fragment_container_new_msg, sendMessageFragment).commit();
     }
 
     @Override
@@ -131,7 +142,8 @@ Log.d(LOG_TAG, "onActivityCreated found fragment_container (ie. in portrait mode
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
-            mListener = (OnEditMessageListener) activity;
+            mListenerEditMsg = (OnEditMessageListener) activity;
+            mListenerMsgSent = (SendMessageFragment.OnMessageSentListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement onEditMessageListener");
@@ -141,7 +153,7 @@ Log.d(LOG_TAG, "onActivityCreated found fragment_container (ie. in portrait mode
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
+        mListenerEditMsg = null;
     }
 
     @Override

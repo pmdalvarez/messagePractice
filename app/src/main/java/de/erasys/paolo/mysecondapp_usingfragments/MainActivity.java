@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 
 import de.erasys.paolo.mysecondapp_usingfragments.content.MessagesContentProvider;
 import de.erasys.paolo.mysecondapp_usingfragments.content.MessagesTable;
@@ -39,12 +40,6 @@ public class MainActivity extends ActionBarActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle presses on the action bar items
         switch (item.getItemId()) {
-            case R.id.action_new_msg:
-                View v = findViewById(R.id.fragment_container_new_msg);
-                if (v != null) {
-                    v.setVisibility(View.VISIBLE);
-                    return true;
-                }
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -62,10 +57,6 @@ public class MainActivity extends ActionBarActivity
             getContentResolver().update(MessagesContentProvider.CONTENT_URI, values, MessagesTable.COLUMN_ID + "=" + msgId, null);
         } else {
             getContentResolver().insert(MessagesContentProvider.CONTENT_URI, values);
-            View v = findViewById(R.id.fragment_container_new_msg);
-            if (v != null) {
-                v.setVisibility(View.GONE);
-            }
         }
 
         // if in portrait mode need to go back to chat history fragment
