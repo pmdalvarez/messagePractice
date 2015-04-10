@@ -107,9 +107,11 @@ Log.d(LOG_TAG, "onActivityCreated");
             }
         });
 
-        // if in portrait mode then add send new message fragment
-        if (getActivity().findViewById(R.id.fragment_container) != null) {
-            // TODO make new msg thing visible
+        // if in portrait mode then hide the send new msg views
+        if (getActivity().findViewById(R.id.fragment_container) == null) {
+            getView().findViewById(R.id.new_subject).setVisibility(View.GONE);
+            getView().findViewById(R.id.new_message).setVisibility(View.GONE);
+            getView().findViewById(R.id.button_send_new).setVisibility(View.GONE);
         }
     }
 
