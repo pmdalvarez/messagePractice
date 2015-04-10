@@ -20,16 +20,26 @@ import de.erasys.paolo.mysecondapp_usingfragments.content.MessagesTable;
  */
 public class MessagesAdapter extends CursorAdapter {
 
-    private LayoutInflater mInflater;
+    private static class ViewHolder {
+        TextView dateView;
+        TextView subjectView;
+        TextView msgView;
+    }
 
     public MessagesAdapter(Context context, Cursor c, int flags) {
         super(context, c, flags);
-        mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        View v = mInflater.inflate(R.layout.chat_history_item, parent, false);
+        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View v = inflater.inflate(R.layout.chat_history_item, parent, false);
+
+        ViewHolder holder   = new ViewHolder();
+        holder.dateView     = (TextView)v.findViewById(R.id.chat_history_item_date);
+        holder.subjectView  = (TextView)v.findViewById(R.id.chat_history_item_subject);
+        holder.msgView      = (TextView)v.findViewById(R.id.chat_history_item_message);
+        v.setTag(holder);
         return v;
     }
 
@@ -39,21 +49,18 @@ public class MessagesAdapter extends CursorAdapter {
         String subject = c.getString(c.getColumnIndexOrThrow(MessagesTable.COLUMN_SUBJECT));
         String message = c.getString(c.getColumnIndexOrThrow(MessagesTable.COLUMN_MESSAGE));
 
-        TextView dateView = (TextView) v.findViewById(R.id.chat_history_item_date);
+        ViewHolder holder = (ViewHolder) v.getTag();
         try {
             Date dateObj  = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(date);
             String dateFormatted = new SimpleDateFormat("d MMM yy HH:mm:ss").format(dateObj);
-            dateView.setText(dateFormatted);
+            holder.dateView.setText(dateFormatted);
         } catch (ParseException e) {
             // don't format the date
             Log.d(this.getClass().getName(), "setViewValue PARSE ERROR date string  = " + date);
         }
 
-        TextView subjectView = (TextView) v.findViewById(R.id.chat_history_item_subject);
-        subjectView.setText(subject);
-
-        TextView msgView = (TextView) v.findViewById(R.id.chat_history_item_message);
-        msgView.setText(message);
+        holder.subjectView.setText(subject);
+        holder.msgView.setText(message);
 
     }
 }

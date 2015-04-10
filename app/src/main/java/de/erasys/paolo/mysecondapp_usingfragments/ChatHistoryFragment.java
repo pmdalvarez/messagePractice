@@ -31,6 +31,11 @@ import de.erasys.paolo.mysecondapp_usingfragments.content.MessagesTable;
 public class ChatHistoryFragment extends Fragment
         implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    public interface OnEditMessageListener {
+        public static long NO_ID = 0;
+        public void onEditMessage(long msgId);
+    }
+
     private static final String LOG_TAG = ChatHistoryFragment.class.getSimpleName() ;
 
     private static final int DELETE_ID = Menu.FIRST + 1;
@@ -39,11 +44,6 @@ public class ChatHistoryFragment extends Fragment
 
     // this is the Adapter being used to display the chat history data
     MessagesAdapter mAdapter = null;
-
-    public static interface OnEditMessageListener {
-        public static long NO_ID = 0;
-        public void onEditMessage(long msgId);
-    }
 
     /**
      * Use this factory method to create a new instance of

@@ -27,15 +27,15 @@ import de.erasys.paolo.mysecondapp_usingfragments.content.MessagesTable;
  */
 public class SendMessageFragment extends Fragment {
 
+    public interface OnMessageSentListener {
+        public void onMessageSent(String subject, String message, long msgId);
+    }
+
     private static final String LOG_TAG = SendMessageFragment.class.getSimpleName() ;
 
     public final static String MSG_ID = "de.erasys.paolo.mysecondapp_usingfragments.MSG_ID";
 
     private OnMessageSentListener mListener;
-
-    public static interface OnMessageSentListener {
-        public void onMessageSent(String subject, String message, long msgId);
-    }
 
     /**
      * Use this factory method to create a new instance of
